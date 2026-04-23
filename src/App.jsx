@@ -7,11 +7,19 @@ async function api(action, params = {}) {
   url.searchParams.set("action", action);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   try {
-    const res = await fetch(url.toString());
+    const res = await fetch(url.toString(), { redirect: "follow", mode: "cors" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
     return await res.json();
   } catch (e) {
     console.error("API Error:", e);
-    return { error: e.message };
+    try {
+      const res2 = await fetch(url.toString(), { redirect: "follow" });
+      const text = await res2.text();
+      return JSON.parse(text);
+    } catch (e2) {
+      console.error("API Retry Error:", e2);
+      return { error: e2.message, drivers: [], races: [], results: [] };
+    }
   }
 }
 
