@@ -2,16 +2,17 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { API_URL, STAFF_PASSWORD } from "./config";
 
 // ─── API CALLS ───
-async function api(action, params = {}) {
-  const url = API_URL + "?action=" + encodeURIComponent(action) + "&" + Object.entries(params).map(([k,v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v)).join("&");
-  try {
-    const res = await fetch(url, { method: "GET", redirect: "follow" });
-    const text = await res.text();
-    try { return JSON.parse(text); } catch { return { error: "Invalid JSON", drivers: [], races: [], results: [] }; }
-  } catch (e) {
-    console.error("API Error:", e);
-    return { error: e.message, drivers: [], races: [], results: [] };
-  }
+function api(action, params = {}) {
+  return new Promise((resolve) => {
+    const cbName = "_cb" + Date.now() + Math.random().toString(36).substr(2,5);
+    const qs = "action=" + encodeURIComponent(action) + "&callback=" + cbName + "&" + Object.entries(params).map(([k,v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v)).join("&");
+    window[cbName] = function(data) { resolve(data); delete window[cbName]; document.getElementById(cbName)?.remove(); };
+    const s = document.createElement("script");
+    s.id = cbName;
+    s.src = API_URL + "?" + qs;
+    s.onerror = function() { resolve({ error: "Network error", drivers: [], races: [], results: [] }); delete window[cbName]; s.remove(); };
+    document.body.appendChild(s);
+  });
 }
 
 // ─── CONSTANTS ───
