@@ -3,11 +3,9 @@ import { API_URL, STAFF_PASSWORD } from "./config";
 
 // ─── API CALLS ───
 async function api(action, params = {}) {
-  const url = new URL(API_URL);
-  url.searchParams.set("action", action);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const url = API_URL + "?action=" + encodeURIComponent(action) + "&" + Object.entries(params).map(([k,v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v)).join("&");
   try {
-    const res = await fetch(url.toString(), { redirect: "follow" });
+    const res = await fetch(url, { method: "GET", redirect: "follow" });
     const text = await res.text();
     try { return JSON.parse(text); } catch { return { error: "Invalid JSON", drivers: [], races: [], results: [] }; }
   } catch (e) {
