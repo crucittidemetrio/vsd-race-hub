@@ -72,9 +72,8 @@ export default function App() {
     results: results.filter(r => r.raceId === race.id)
   }));
 
-  const doLogin = async (pwd) => {
-    const res = await api("checkPassword", { password: pwd });
-    if (res.valid) {
+ const doLogin = async (pwd) => {
+    if (pwd === STAFF_PASSWORD) {
       setIsStaff(true);
       localStorage.setItem("vsd-staff", "true");
       setShowLogin(false);
